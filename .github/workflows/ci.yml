@@ -1,0 +1,64 @@
+name: JWT Analyzer CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-artifacts:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: jwt-analyzer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyjwt requests cryptography colorama pytest
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Generate CI reports
+        run: |
+          TOKEN=$(python - <<'PY'
+          import time
+          import jwt
+
+          payload = {
+              "sub": "ci-user",
+              "iss": "ci-pipeline",
+              "aud": "jwt-analyzer",
+              "exp": int(time.time()) + 3600,
+          }
+          secret = "ci_demo_secret_value_at_least_32_chars"
+          print(jwt.encode(payload, secret, algorithm="HS256"))
+          PY
+          )
+
+          python main.py \
+            --token "$TOKEN" \
+            --known-secret "ci_demo_secret_value_at_least_32_chars" \
+            --report \
+            --output reports/report.html \
+            > reports/report-output.txt
+
+      - name: Upload report artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: jwt-analyzer-reports-${{ github.run_id }}
+          path: |
+            jwt-analyzer/reports/report.html
+            jwt-analyzer/reports/report-output.txt
+          if-no-files-found: error
+          retention-days: 14

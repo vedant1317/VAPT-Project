@@ -1,0 +1,33 @@
+﻿==============================================================
+ JWT SECURITY ANALYSIS REPORT
+==============================================================
+Header : {"alg": "HS256", "typ": "JWT"}
+Payload: {"sub": "admin"}
+--------------------------------------------------------------
+[CRITICAL] Known Weak Shared Secret
+  Description: Provided secret appears in a weak-secret denylist.
+  Fix        : Rotate to a high-entropy random secret and remove predictable values from use.
+--------------------------------------------------------------
+[HIGH] Shared Secret Too Short
+  Description: Provided shared secret is below the recommended minimum length.
+  Fix        : Use at least 32 random bytes and store in a dedicated secret manager.
+--------------------------------------------------------------
+[MEDIUM] Low-Entropy Shared Secret
+  Description: Secret complexity appears low based on character distribution.
+  Fix        : Generate secrets with a cryptographically secure random source.
+--------------------------------------------------------------
+[MEDIUM] Missing Expiration Claim
+  Description: Token does not contain an 'exp' claim.
+  Fix        : Add short-lived expiration times for all authentication tokens.
+--------------------------------------------------------------
+[LOW] Missing Audience Claim
+  Description: Token does not include an 'aud' claim.
+  Fix        : Set and enforce audience claim per consuming service.
+--------------------------------------------------------------
+[LOW] Missing Issuer Claim
+  Description: Token does not include an 'iss' claim.
+  Fix        : Populate and validate issuer claim against trusted issuers.
+--------------------------------------------------------------
+OVERALL RISK SCORE: 9.8/10 (CRITICAL)
+==============================================================
+HTML report written to: C:\Users\Vedant\VAPT-Project\jwt-analyzer\reports\demo-20260423-221904\weak-report.html

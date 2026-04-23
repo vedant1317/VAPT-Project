@@ -59,8 +59,8 @@ jwt-analyzer/
 |   \-- report.html
 \-- tests/
     |-- test_decoder.py
-  |-- test_main.py
-  |-- test_alg_key_binding_check.py
+    |-- test_main.py
+    |-- test_alg_key_binding_check.py
     |-- test_claim_audit.py
     |-- test_payload_scan.py
     \-- test_reporter.py
@@ -122,17 +122,18 @@ python main.py --token <JWT> --known-secret "your-secret-value" --wordlist wordl
 python main.py --token <JWT> --report --output reports/report.html
 ```
 
-### 7) Emit JSON to stdout (CI friendly)
+## CI Workflow
 
-```powershell
-python main.py --token <JWT> --json
-```
+Repository CI workflow:
 
-### 8) Write JSON report file
+- `.github/workflows/ci.yml`
 
-```powershell
-python main.py --token <JWT> --json --json-output reports/report.json
-```
+It performs the following on push and pull request:
+- Installs dependencies
+- Runs `pytest`
+- Generates sample `reports/report.html`
+- Captures CLI output for CI artifact review
+- Uploads reports as workflow artifacts
 
 ## Output Model
 
@@ -145,6 +146,8 @@ Each finding includes:
 - evidence
 - impact
 - remediation
+
+The generated HTML report is a React-based frontend with responsive layout, severity cards, evidence panels, and presentation-ready typography.
 
 Risk score range is 0.0 to 10.0 with bands:
 - NONE
@@ -159,6 +162,27 @@ Run tests from the jwt-analyzer directory:
 
 ```powershell
 python -m pytest -q
+```
+
+## One-Click Demo Runner
+
+Run the full demo flow (healthy token, weak token, malformed token):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1
+```
+
+Useful switches:
+
+```powershell
+# Skip tests for faster demo iteration
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1 -SkipTests
+
+# Do not auto-open browser windows
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1 -NoOpenReports
+
+# Custom output folder
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1 -OutputDir reports\demo-custom
 ```
 
 ## Guardrails for Contributors

@@ -1,0 +1,1 @@
+﻿[ERROR] Invalid JWT: JWT must contain exactly 3 dot-separated segments.

@@ -1,15 +1,12 @@
-import json
 from pathlib import Path
 
 from core.reporter import (
 	build_report_data,
 	calculate_risk_score,
 	render_html_report,
-	render_json_report,
 	render_terminal_report,
 	risk_level,
 	write_html_report,
-	write_json_report,
 )
 
 
@@ -59,6 +56,8 @@ def test_html_report_write_round_trip(tmp_path: Path) -> None:
 	assert written_path.exists()
 	written_text = written_path.read_text(encoding="utf-8")
 	assert "JWT Security Analysis Report" in written_text
+	assert "react.production.min.js" in written_text
+	assert "id=\"report-root\"" in written_text
 
 
 def test_build_report_data_has_summary_counts() -> None:
@@ -70,24 +69,13 @@ def test_build_report_data_has_summary_counts() -> None:
 	assert data["severity_counts"]["low"] == 1
 
 
-def test_render_json_report_is_valid_json() -> None:
-	findings = [_finding("A", "Medium")]
-	serialized = render_json_report({"alg": "HS256"}, {"sub": "alice"}, findings)
-	parsed = json.loads(serialized)
+def test_react_html_report_embeds_serialized_report_data() -> None:
+	html_report = render_html_report(
+		{"alg": "HS256", "typ": "JWT"},
+		{"sub": "alice"},
+		[_finding("A", "Medium")],
+	)
 
-	assert parsed["header"]["alg"] == "HS256"
-	assert parsed["findings"][0]["id"] == "A"
-
-
-def test_write_json_report_round_trip(tmp_path: Path) -> None:
-	data = {
-		"risk_score": 5.1,
-		"risk_level": "MEDIUM",
-		"findings": [],
-	}
-	output_path = tmp_path / "report.json"
-	written_path = write_json_report(data, output_path)
-
-	assert written_path.exists()
-	written = json.loads(written_path.read_text(encoding="utf-8"))
-	assert written["risk_level"] == "MEDIUM"
+	assert "const REPORT_DATA =" in html_report
+	assert "JWT Assessment Report" in html_report
+	assert "findings" in html_report

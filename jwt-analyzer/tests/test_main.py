@@ -1,5 +1,6 @@
 import base64
 import json
+from pathlib import Path
 
 from main import main
 
@@ -21,42 +22,33 @@ def test_main_returns_error_for_invalid_token(capsys) -> None:
 	assert "[ERROR] Invalid JWT" in captured.out
 
 
-def test_main_json_stdout_mode_returns_machine_readable_output(capsys) -> None:
+def test_main_outputs_terminal_report_for_valid_token(capsys) -> None:
 	token = _build_token(
 		{"alg": "HS256", "typ": "JWT"},
 		{"sub": "alice", "exp": 4_102_444_800, "iss": "issuer", "aud": "api"},
 	)
 
-	exit_code = main(["--token", token, "--json"])
+	exit_code = main(["--token", token])
 	captured = capsys.readouterr()
 
 	assert exit_code == 0
-	parsed = json.loads(captured.out)
-	assert parsed["header"]["alg"] == "HS256"
-	assert parsed["risk_level"] in {"NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"}
-	assert "findings" in parsed
+	assert "JWT SECURITY ANALYSIS REPORT" in captured.out
+	assert "OVERALL RISK SCORE" in captured.out
 
 
-def test_main_json_output_writes_file_and_logs_path_to_stderr(tmp_path, capsys) -> None:
+def test_main_report_mode_writes_html_output(tmp_path: Path, capsys) -> None:
 	token = _build_token(
 		{"alg": "HS256", "typ": "JWT"},
 		{"sub": "alice", "exp": 4_102_444_800, "iss": "issuer", "aud": "api"},
 	)
-	json_output = tmp_path / "analysis.json"
+	html_output = tmp_path / "analysis.html"
 
-	exit_code = main(
-		[
-			"--token",
-			token,
-			"--json",
-			"--json-output",
-			str(json_output),
-		]
-	)
+	exit_code = main(["--token", token, "--report", "--output", str(html_output)])
 	captured = capsys.readouterr()
 
 	assert exit_code == 0
-	assert json_output.exists()
-	assert "JSON report written to:" in captured.err
-	file_payload = json.loads(json_output.read_text(encoding="utf-8"))
-	assert "risk_score" in file_payload
+	assert html_output.exists()
+	assert "HTML report written to:" in captured.out
+	html_text = html_output.read_text(encoding="utf-8")
+	assert "react.production.min.js" in html_text
+	assert "id=\"report-root\"" in html_text

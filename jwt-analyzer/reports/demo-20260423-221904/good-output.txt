@@ -1,0 +1,10 @@
+﻿==============================================================
+ JWT SECURITY ANALYSIS REPORT
+==============================================================
+Header : {"alg": "HS256", "typ": "JWT"}
+Payload: {"aud": "demo-api", "exp": 1776966545, "iss": "demo", "sub": "demo-user"}
+--------------------------------------------------------------
+No findings detected.
+OVERALL RISK SCORE: 0.0/10 (NONE)
+==============================================================
+HTML report written to: C:\Users\Vedant\VAPT-Project\jwt-analyzer\reports\demo-20260423-221904\good-report.html

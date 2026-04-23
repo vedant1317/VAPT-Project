@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -16,13 +15,10 @@ from core.attacks.payload_scan import run_payload_scan
 from core.attacks.secret_strength_check import run_secret_strength_check
 from core.decoder import JWTDecodeError, decode_token
 from core.reporter import (
-	build_report_data,
 	calculate_risk_score,
 	render_html_report,
-	render_json_report,
 	render_terminal_report,
 	write_html_report,
-	write_json_report,
 )
 
 
@@ -166,15 +162,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 		default=str(default_output),
 		help="Output path for HTML report",
 	)
-	parser.add_argument(
-		"--json",
-		action="store_true",
-		help="Emit machine-readable JSON analysis to stdout",
-	)
-	parser.add_argument(
-		"--json-output",
-		help="Optional output path for machine-readable JSON report",
-	)
 	parser.add_argument("--verbose", action="store_true", help="Print raw finding JSON")
 	return parser.parse_args(argv)
 
@@ -213,40 +200,10 @@ def main(argv: list[str] | None = None) -> int:
 
 	generated_at = datetime.now(timezone.utc).isoformat()
 	score = calculate_risk_score(findings)
-	report_data = build_report_data(
-		header,
-		payload,
-		findings,
-		score=score,
-		generated_at=generated_at,
-	)
-
-	if args.json:
-		print(
-			render_json_report(
-				header,
-				payload,
-				findings,
-				score=score,
-				generated_at=generated_at,
-			)
-		)
-	else:
-		print(render_terminal_report(header, payload, findings, score=score))
+	print(render_terminal_report(header, payload, findings, score=score))
 
 	if args.verbose:
-		verbose_json = json.dumps(findings, indent=2, default=str)
-		if args.json:
-			print(verbose_json, file=sys.stderr)
-		else:
-			print(verbose_json)
-
-	if args.json_output:
-		json_path = write_json_report(report_data, args.json_output)
-		if args.json:
-			print(f"JSON report written to: {json_path}", file=sys.stderr)
-		else:
-			print(f"JSON report written to: {json_path}")
+		print(json.dumps(findings, indent=2, default=str))
 
 	if args.report:
 		html_report = render_html_report(
@@ -257,10 +214,7 @@ def main(argv: list[str] | None = None) -> int:
 			generated_at=generated_at,
 		)
 		output_path = write_html_report(html_report, args.output)
-		if args.json:
-			print(f"HTML report written to: {output_path}", file=sys.stderr)
-		else:
-			print(f"HTML report written to: {output_path}")
+		print(f"HTML report written to: {output_path}")
 
 	return 0
 
